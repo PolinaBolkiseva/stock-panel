@@ -2,9 +2,10 @@
 export interface IProduct {
   id: string;
   name: string;
+  description: string;
   price: number;
   stock: number;
-} 
+}
 
 // Данные, которые карточка умеет показывать.
 export interface IProductCard {

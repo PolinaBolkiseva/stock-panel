@@ -25,6 +25,18 @@
       </div>
     </div>
 
+    <!-- Шаблон подробной карточки товара. Показывается в модалке по клику на карточку. -->
+    <template id="product-preview">
+      <div class="preview">
+        <h2 class="card__title"></h2>
+        <p class="card__description"></p>
+        <div class="preview__meta">
+          <span class="card__price"></span>
+          <span class="card__stock"></span>
+        </div>
+      </div>
+    </template>
+
     <!-- Динамическая разметка: шаблон карточки, клонируется на каждый товар -->
     <template id="product-card">
       <li class="card">
