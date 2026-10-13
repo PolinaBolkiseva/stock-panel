@@ -5,3 +5,10 @@ export interface IProduct {
   price: number;
   stock: number;
 } 
+
+// Данные, которые карточка умеет показывать.
+export interface IProductCard {
+  title: string;
+  price: number;
+  stock: number;
+}

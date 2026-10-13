@@ -1,13 +1,29 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>stock-panel</title>
+    <title>Панель управления остатками товаров</title>
   </head>
-  <body>
-    <div id="app"></div>
+  <body class="page">
+    <main class="panel">
+      <h1 class="panel__title">Остатки товаров</h1>
+
+      <!-- Статичная разметка: контейнер для списка карточек -->
+      <section class="catalog">
+        <ul class="catalog__list"></ul>
+      </section>
+    </main>
+
+    <!-- Динамическая разметка: шаблон карточки, клонируется на каждый товар -->
+    <template id="product-card">
+      <li class="card">
+        <h2 class="card__title"></h2>
+        <p class="card__stock"></p>
+        <span class="card__price"></span>
+      </li>
+    </template>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

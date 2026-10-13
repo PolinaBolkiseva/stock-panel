@@ -1,33 +1,25 @@
+// src/main.ts
+import './styles.css';
 
-import { Products } from './components/models/Products';
-import type { IProduct } from './types';
+import { Catalog } from './components/views/Catalog';
+import { ProductCard } from './components/views/ProductCard';
+import { cloneTemplate, ensureElement } from './utils/utils';
 
-// Тестовые данные (в проектной работе такие придут с сервера).
-const testItems: IProduct[] = [
-  { id: 'p1', name: 'Кофе в зёрнах «Утро»', price: 690, stock: 12 },
-  { id: 'p2', name: 'Чай зелёный «Сенча»', price: 320, stock: 4 },
-  { id: 'p3', name: 'Печенье овсяное', price: 150, stock: 0 },
+// Фейковые данные «для отображения». Заметьте: это НЕ товары из модели —
+// просто объекты той формы, которую ждёт карточка.
+const fakeCards = [
+  { title: 'Кофе в зёрнах «Утро»', price: 690, stock: 12 },
+  { title: 'Чай зелёный «Сенча»', price: 320, stock: 4 },
+  { title: 'Печенье овсяное', price: 150, stock: 0 },
 ];
 
-const products = new Products();
+// Каталог живёт в статичной разметке страницы.
+const catalog = new Catalog(ensureElement<HTMLElement>('.catalog__list'));
 
-// 1. Загрузка и чтение.
-products.setItems(testItems);
-console.log('Все товары:', products.getItems());
-console.log('Один товар по id:', products.getItem('p2'));
-console.log('Несуществующий id:', products.getItem('p99'));
+// На каждый набор данных: клон шаблона → компонент → рендер.
+const cards = fakeCards.map((data) =>
+  new ProductCard(cloneTemplate<HTMLElement>('#product-card')).render(data)
+);
 
-// 2. Валидное поступление: остаток «Сенчи» должен вырасти с 4 до 9.
-products.receive('p2', 5);
-console.log('Остаток «Сенчи» после поступления 5 шт:', products.getItem('p2')?.stock);
-
-// 3. Нарушения правил: модель должна отклонить некорректные вызовы.
-products.receive('p99', 5); // несуществующий товар
-products.receive('p1', -3); // отрицательное количество
-products.receive('p1', 2.5); // дробное количество
-console.log('Остаток кофе не изменился:', products.getItem('p1')?.stock);
-
-// 4. Остаток 0;
-console.log('Товар, который закончился:', products.getOutOfStock());
-products.receive('p3', 10);
-console.log('Товар, который закончился:', products.getOutOfStock());
+// Отдаём готовые элементы каталогу.
+catalog.render({ items: cards });
