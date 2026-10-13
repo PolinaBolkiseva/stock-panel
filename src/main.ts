@@ -22,6 +22,9 @@ const testItems: IProduct[] = [
 // Единственный брокер на всё приложение.
 const events = new EventEmitter();
 
+// --- Отладка ---
+events.onAll(({ eventName }) => console.log('Событие:', eventName));
+
 // Модель получает брокер, чтобы объявлять об изменениях.
 const products = new Products(events);
 
@@ -50,5 +53,4 @@ products.setItems(testItems);
 
 // Временная демонстрация: через три секунды на склад «привозят» 5 упаковок чая.
 //setTimeout(() => products.receive('p2', 5), 3000);
-
-//products.receive('p2', -3)
+//setTimeout(() => products.receive('p2', -3), 3000);
