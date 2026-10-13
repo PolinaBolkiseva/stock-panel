@@ -15,6 +15,16 @@
       </section>
     </main>
 
+    <!-- Статичная разметка: модальное окно, универсальный контейнер для любого содержимого -->
+    <div class="modal" id="modal-container">
+      <div class="modal__container">
+        <button class="modal__close" type="button" aria-label="закрыть">
+          ×
+        </button>
+        <div class="modal__content"></div>
+      </div>
+    </div>
+
     <!-- Динамическая разметка: шаблон карточки, клонируется на каждый товар -->
     <template id="product-card">
       <li class="card">
@@ -22,6 +32,36 @@
         <p class="card__stock"></p>
         <span class="card__price"></span>
       </li>
+    </template>
+
+    <!-- Шаблон формы документа поступления. Показывается в модалке. -->
+    <template id="receipt">
+      <form class="form receipt" name="receipt">
+        <h2 class="receipt__title"></h2>
+        <p class="receipt__stock"></p>
+
+        <div class="receipt__reasons">
+          <button type="button" class="button button_alt" name="supplier">От поставщика</button>
+          <button type="button" class="button button_alt" name="customer-return">
+            Возврат от покупателя
+          </button>
+        </div>
+
+        <label class="receipt__field">
+          <span>Количество</span>
+          <input
+            class="receipt__input"
+            name="quantity"
+            type="number"
+            min="1"
+            step="1"
+            placeholder="Сколько поступило"
+          />
+        </label>
+
+        <button type="submit" class="button receipt__submit" disabled>Провести</button>
+        <span class="receipt__errors"></span>
+      </form>
     </template>
 
     <script type="module" src="/src/main.ts"></script>

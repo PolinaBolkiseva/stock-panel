@@ -53,3 +53,124 @@
 .card__stock_empty {
   color: #dc2626;
 }
+
+/* ----- Модальное окно ----- */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.modal_active {
+  display: flex;
+}
+
+.modal__container {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  padding: 28px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.modal__close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  color: #7b8794;
+  font-size: 22px;
+  line-height: 1;
+}
+
+/* ----- Форма документа поступления ----- */
+.receipt {
+  display: grid;
+  gap: 14px;
+}
+
+.receipt__title {
+  margin: 0;
+  font-size: 18px;
+}
+
+.receipt__stock {
+  margin: 0;
+  color: #7b8794;
+  font-size: 14px;
+}
+
+.receipt__reasons {
+  display: flex;
+  gap: 8px;
+}
+
+.receipt__field {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  color: #7b8794;
+}
+
+.receipt__input {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 15px;
+  border: 1px solid #d3d9df;
+  border-radius: 8px;
+}
+
+.receipt__errors {
+  min-height: 18px;
+  color: #dc2626;
+  font-size: 14px;
+}
+
+/* ----- Кнопки ----- */
+button {
+  font: inherit;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #3b82f6;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(1.05);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Кнопки-переключатели: вторичный стиль и активное состояние */
+.button_alt {
+  flex: 1;
+  background: #fff;
+  color: #1f2933;
+  border: 1px solid #d3d9df;
+}
+
+.button_alt:hover {
+  filter: none;
+  border-color: #3b82f6;
+}
+
+.button_alt-active {
+  background: #3b82f6;
+  color: #fff;
+  border-color: #3b82f6;
+}

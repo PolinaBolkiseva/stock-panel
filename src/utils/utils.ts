@@ -27,3 +27,12 @@ export function cloneTemplate<T extends HTMLElement>(
   }
   return template.content.firstElementChild.cloneNode(true) as T;
 }
+
+// Найти ВСЕ элементы по селектору. Пустой результат — не ошибка:
+// сколько элементов нашлось, столько и вернём.
+export function ensureAllElements<T extends HTMLElement>(
+  selectorElement: string,
+  context: HTMLElement = document.body
+): T[] {
+  return Array.from(context.querySelectorAll(selectorElement)) as T[];
+}
