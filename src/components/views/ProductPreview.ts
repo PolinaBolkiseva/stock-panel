@@ -23,4 +23,9 @@ export class ProductPreview extends Card<IPreviewExtra> {
   protected set description(value: string) {
     this.descriptionElement.textContent = value;
   }
+  
+  // Переопределение: в подробной карточке нулевой остаток показываем словами.
+  protected set stock(value: number) {
+    this.stockElement.textContent = value > 0 ? `Остаток: ${value} шт` : 'Нет на складе';
+  }
 }
