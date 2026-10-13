@@ -9,9 +9,9 @@ import { Catalog } from './components/views/Catalog';
 import { ProductCard } from './components/views/ProductCard';
 import type { IProduct, TReceiptReason } from './types';
 import { cloneTemplate, ensureElement } from './utils/utils';
-//import { Receipt } from './components/models/Receipt'; 
-//import { Modal } from './components/views/Modal';
-//import { ReceiptForm } from './components/views/ReceiptForm';
+import { Receipt } from './components/models/Receipt';
+import { Modal } from './components/views/Modal';
+import { ReceiptForm } from './components/views/ReceiptForm';
 
 // Тестовые данные (в проектной работе такие придут с сервера).
 const testItems: IProduct[] = [
@@ -25,8 +25,18 @@ const testItems: IProduct[] = [
 // Единственный брокер на всё приложение.
 const events = new EventEmitter();
 
+// Модель документа поступления.
+const receipt = new Receipt(events);
+
+// Модалка живёт в статичной разметке страницы.
+const modal = new Modal(ensureElement<HTMLElement>('#modal-container'));
+
+// Форму создаём один раз из шаблона — статичный компонент.
+const receiptForm = new ReceiptForm(events, cloneTemplate<HTMLFormElement>('#receipt'));
+
 // --- Отладка ---
-events.onAll(({ eventName }) => console.log('Событие:', eventName));
+// Для отладки — лог всей событийной «переписки» (приём из урока о сборке приложения).
+events.onAll(({ eventName, data }) => console.log(eventName, data));
 
 // Модель получает брокер, чтобы объявлять об изменениях.
 const products = new Products(events);
@@ -35,11 +45,13 @@ const products = new Products(events);
 const catalog = new Catalog(ensureElement<HTMLElement>('.catalog__list'));
 
 // --- Презентер ---
-
 // Каталог изменился → забрать товары у модели и перерисовать карточки.
 events.on('catalog:changed', () => {
   const cards = products.getItems().map((item) =>
-    new ProductCard(cloneTemplate<HTMLElement>('#product-card')).render({
+    new ProductCard(cloneTemplate<HTMLElement>('#product-card'), {
+      // Кнопка «Поступление товара»: сообщаем факт — для какого товара его запросили.
+      onReceipt: () => events.emit('receipt:requested', item),
+    }).render({
       title: item.name, // у модели поле name, у карточки — title
       price: item.price,
       stock: item.stock,
@@ -49,85 +61,49 @@ events.on('catalog:changed', () => {
   catalog.render({ items: cards });
 });
 
+// Запросили поступление → открыть документ и показать форму в модалке.
+events.on('receipt:requested', (item: IProduct) => {
+  receipt.start(item); // эмитит 'receipt:changed' → форма отрисуется в подписчике ниже
+  modal.render({ content: receiptForm.render() });
+});
+
+// Ввод в форме → сохранить в документ. По имени поля презентер
+// выбирает, какой сеттер модели вызвать.
+events.on('form:changed', (data: { field: 'reason' | 'quantity'; value: string }) => {
+  if (data.field === 'reason') {
+    receipt.setReason(data.value as TReceiptReason);
+  } else {
+    receipt.setQuantity(data.value);
+  }
+});
+
+// Документ изменился → перерисовать форму из актуальных данных модели.
+events.on('receipt:changed', () => {
+  const state = receipt.getState();
+  const errors = receipt.validate();
+  // Ошибки показываем, только когда пользователь начал заполнять документ.
+  const touched = state.reason !== null || state.quantityRaw !== '';
+
+  receiptForm.render({
+    title: `Поступление: {formula}{state.product?.name ?? ''}`,     stock: `Текущий остаток: {/formula}{state.product?.stock ?? 0} шт`,
+    reason: state.reason,
+    quantity: state.quantityRaw,
+    valid: Object.keys(errors).length === 0,
+    errors: touched ? Object.values(errors).join('; ') : '',
+  });
+  
+});
+
+// Проведение документа → выполнить операцию в модели товаров,
+// выбросить черновик и закрыть модалку.
+events.on('receipt:submitted', () => {
+  const { productId, quantity } = receipt.getData();
+  products.receive(productId, quantity); // эмитит 'catalog:changed' → каталог обновится
+  receipt.clear();
+  modal.close();
+});
 // --- Запуск ---
 
 // Загружаем каталог. Модель объявит 'catalog:changed' — и презентер отрисует его.
 products.setItems(testItems);
 
-// Временная демонстрация: через три секунды на склад «привозят» 5 упаковок чая.
-//setTimeout(() => products.receive('p2', 5), 3000);
-//setTimeout(() => products.receive('p2', -3), 3000);
-/*
-// =============================================================
-// Временный тест: модалка и форма (удалим в конце урока).
-// Готовый код выше не трогаем — новые детали проверяем рядом.
-// =============================================================
-
-// Свой брокер: новые детали проверяем в изоляции от приложения.
-const testEvents = new EventEmitter();
-
-// Модалка живёт в статичной разметке страницы.
-const modal = new Modal(ensureElement<HTMLElement>('#modal-container'));
-
-// Форму создаём один раз из шаблона — статичный компонент.
-const receiptForm = new ReceiptForm(testEvents, cloneTemplate<HTMLFormElement>('#receipt'));
-
-// Слушаем всю «переписку» формы — приём из урока о событиях.
-testEvents.onAll(({ eventName, data }) => console.log('Событие формы:', eventName, data));
-
-// Открываем модалку с формой, отрисованной из фейковых данных.
-modal.render({
-  content: receiptForm.render({
-    title: 'Поступление: Тестовый товар',
-    stock: 'Текущий остаток: 4 шт',
-    reason: null,
-    quantity: '',
-    valid: true, // включим кнопку, чтобы проверить и submit
-    errors: '',
-  }),
-});
-
-// Мини-презентер для теста: вернуть выбор причины обратно в форму.
-testEvents.on<{ field: string; value: TReceiptReason }>('form:changed', (data) => {
-  if (data.field === 'reason') {
-    receiptForm.render({ reason: data.value });
-  }
-});
-
-*/
-/*
-// =============================================================
-// Временный тест: модель Receipt (удалим в конце урока).
-// Готовый код выше не трогаем — новую деталь проверяем рядом.
-// =============================================================
-
-// Свой брокер: документ проверяем в полной изоляции —
-// даже от брокера работающего приложения.
-const testEvents = new EventEmitter();
-const receipt = new Receipt(testEvents);
-
-// Тест-подписчик: документ изменился — печатаем его состояние.
-testEvents.on('receipt:changed', () => {
-  console.log('Документ изменился:', receipt.getState());
-});
-
-// 1. Открываем документ на товар — модель должна объявить об изменении.
-receipt.start({ id: 'p2', name: 'Чай зелёный «Сенча»', price: 320, stock: 4 });
-console.log('Ошибки пустого документа:', receipt.validate());
-
-// 2. Заполняем поля — каждое изменение объявляется событием.
-receipt.setReason('supplier');
-receipt.setQuantity('5');
-console.log('Ошибки заполненного документа:', receipt.validate());
-console.log('Данные для проведения:', receipt.getData());
-
-
-// 2. Заполняем поля — каждое изменение объявляется событием.
-receipt.setReason('supplier');
-receipt.setQuantity('5000');
-console.log('Ошибки заполненного документа:', receipt.validate());
-console.log('Данные для проведения:', receipt.getData());
-// 3. Портим количество — валидация должна это поймать.
-receipt.setQuantity('2.5');
-console.log('Ошибки с дробным количеством:', receipt.validate()); 
-*/
