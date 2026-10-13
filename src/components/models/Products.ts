@@ -32,4 +32,9 @@ export class Products {
     }
     item.stock += amount;
   }   
+
+  getOutOfStock(): IProduct[] {
+    const productIsOutList: IProduct[] = this.items.filter(el=>el.stock===0);
+    return productIsOutList;
+  }
 } 

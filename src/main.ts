@@ -26,3 +26,8 @@ products.receive('p99', 5); // несуществующий товар
 products.receive('p1', -3); // отрицательное количество
 products.receive('p1', 2.5); // дробное количество
 console.log('Остаток кофе не изменился:', products.getItem('p1')?.stock);
+
+// 4. Остаток 0;
+console.log('Товар, который закончился:', products.getOutOfStock());
+products.receive('p3', 10);
+console.log('Товар, который закончился:', products.getOutOfStock());
