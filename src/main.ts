@@ -1,7 +1,14 @@
-// src/main.ts
+// src/main.ts — точка входа. Здесь собирается всё приложение.
+// ПРЕЗЕНТЕР пока живёт прямо в этом файле (упрощение) —
+// в большом проекте это был бы отдельный класс.
+import './styles.css';
+
 import { EventEmitter } from './components/base/Events';
 import { Products } from './components/models/Products';
+import { Catalog } from './components/views/Catalog';
+import { ProductCard } from './components/views/ProductCard';
 import type { IProduct } from './types';
+import { cloneTemplate, ensureElement } from './utils/utils';
 
 // Тестовые данные (в проектной работе такие придут с сервера).
 const testItems: IProduct[] = [
@@ -10,33 +17,38 @@ const testItems: IProduct[] = [
   { id: 'p3', name: 'Печенье овсяное', price: 150, stock: 0 },
 ];
 
-// Один брокер на всё приложение; модель получает его через конструктор.
+// --- Участники ---
+
+// Единственный брокер на всё приложение.
 const events = new EventEmitter();
+
+// Модель получает брокер, чтобы объявлять об изменениях.
 const products = new Products(events);
 
-// Тест-подписчик: услышал событие — забрал у модели свежее состояние геттером.
+// Каталог живёт в статичной разметке страницы.
+const catalog = new Catalog(ensureElement<HTMLElement>('.catalog__list'));
+
+// --- Презентер ---
+
+// Каталог изменился → забрать товары у модели и перерисовать карточки.
 events.on('catalog:changed', () => {
-  console.log(
-    'Событие catalog:changed! Остатки:',
-    products.getItems().map((item) => `${item.name}: ${item.stock}`)
+  const cards = products.getItems().map((item) =>
+    new ProductCard(cloneTemplate<HTMLElement>('#product-card')).render({
+      title: item.name, // у модели поле name, у карточки — title
+      price: item.price,
+      stock: item.stock,
+    })
   );
+
+  catalog.render({ items: cards });
 });
 
-let changesCount = 0;
-events.on('catalog:changed', () => {
-  changesCount++;
-  console.log(
-    'Изменений каталога: N:', `${changesCount }`
-  );
-});
+// --- Запуск ---
 
-// 1. Загрузка каталога — модель должна объявить об изменении.
+// Загружаем каталог. Модель объявит 'catalog:changed' — и презентер отрисует его.
 products.setItems(testItems);
 
-// 2. Валидное поступление — ещё одно объявление, остаток «Сенчи» вырастет до 9.
-products.receive('p2', 5);
+// Временная демонстрация: через три секунды на склад «привозят» 5 упаковок чая.
+//setTimeout(() => products.receive('p2', 5), 3000);
 
-// 3. Нарушение правила — данные не изменились, события быть не должно.
-products.receive('p1', -3);
-
-products.receive('p3', 99);
+//products.receive('p2', -3)
